@@ -591,7 +591,8 @@ void WxeApp::destroyMemEnv(wxeMetaCommand& Ecmd) {
       ptrMap::iterator it = ptr2ref.find(ptr);
       if(it != ptr2ref.end()) {
 	wxeRefData *refd = it->second;
-	if(refd->alloc_in_erl && refd->type == 0) {
+  int type = refd->type;
+	if(refd->alloc_in_erl && type == 0) {
 	  parent = (wxWindow *) ptr;
 	  // fprintf(stderr, "window %x %d\r\n", (int) parent, refd->ref);
 	  while(parent->GetParent()) {
@@ -618,11 +619,11 @@ void WxeApp::destroyMemEnv(wxeMetaCommand& Ecmd) {
 	wxeRefData *refd = it->second;
 	if(refd->alloc_in_erl) {
 	  int type = refd->type;
-	  if((refd->type == 1) && ((wxObject *)ptr)->IsKindOf(CLASSINFO(wxBufferedDC))) {
+	  if((type == 1) && ((wxObject *)ptr)->IsKindOf(CLASSINFO(wxBufferedDC))) {
 	    ((wxBufferedDC *)ptr)->m_dc = NULL; // Workaround
 	  }
 	  wxString msg;
-	  if((refd->type == 0)) { // Maybe also class 1
+	  if(type == 0) { // Maybe also class 1
 	    wxClassInfo *cinfo = ((wxObject *)ptr)->GetClassInfo();
 	    msg.Printf(wxT("Memory leak: {wx_ref, %d, %s}"),
 		       refd->ref, cinfo->GetClassName());
@@ -783,7 +784,7 @@ void * WxeApp::getPtr(char * bp, wxeMemEnv *memenv) {
     throw wxe_badarg(index);
   }
   void * temp = memenv->ref2ptr[index];
-  if((index < memenv->next) && ((index == 0) || (temp > NULL)))
+  if((index < memenv->next) && ((index == 0) || (temp > (void *) NULL)))
     return temp;
   else {
     throw wxe_badarg(index);
@@ -795,7 +796,7 @@ void WxeApp::registerPid(char * bp, ErlDrvTermData pid, wxeMemEnv * memenv) {
   if(!memenv)
     throw wxe_badarg(index);
   void * temp = memenv->ref2ptr[index];
-  if((index < memenv->next) && ((index == 0) || (temp > NULL))) {
+  if((index < memenv->next) && ((index == 0) || (temp > (void *) NULL))) {
     ptrMap::iterator it;
     it = ptr2ref.find(temp);
     if(it != ptr2ref.end()) {
